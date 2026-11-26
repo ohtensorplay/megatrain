@@ -14,10 +14,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=8"]
+test = [
+    "pytest>=8",
+    # TensorPlay's MEGA serialization raises without it; checkpoint tests use it.
+    "megatensors>=0.0.5",
+]
 dev = [
     "pre-commit>=3.7",
     "pytest>=8",
+    "megatensors>=0.0.5",
     # Pinned: ruff format output is part of the gate, so the version is too.
     "ruff==0.16.8",
     "build>=1.2",
