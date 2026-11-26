@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A superseded run on the same branch tells nobody anything.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # Lint and the header check are stdlib/ruff only: no TensorPlay install,
+      # so a flaky package index cannot make a formatting problem look green.
+      - run: python -m pip install "ruff==0.16.8"
+      - run: python -m ruff check src tests bench tools
+      - run: python -m ruff format --check src tests bench tools
+      - run: python tools/check_headers.py
+
+  test:
+    name: test (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[test]" \
+            --extra-index-url https://download.tensorplay.cn/simple
+      - name: Test
+        run: python -m pytest tests -q
+
+  package:
+    name: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install "build>=1.2" "twine>=5"
+      - run: python -m build
+      - run: python -m twine check dist/*

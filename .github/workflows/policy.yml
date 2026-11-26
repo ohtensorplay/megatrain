@@ -1,0 +1,47 @@
+name: Policy
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  commit-schema:
+    name: commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The whole history, so the base commit of the pull request is an
+          # ancestor of what was checked out.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      # A squash merge takes the pull-request title as its subject, so the
+      # title has to satisfy the same schema as a commit.
+      - name: Validate the pull-request title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: python tools/commit_schema.py --message "$PR_TITLE"
+      - name: Validate every commit and its sign-off
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python tools/commit_schema.py --range "$BASE_SHA..HEAD" --require-signoff
+
+  description:
+    name: pull-request description
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      # Passed through the environment: a PR body is untrusted input and must
+      # never be interpolated into a shell command.
+      - name: Validate the description against the template
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python tools/check_pr_body.py
