@@ -93,7 +93,7 @@ checkpoint 为原子发布 + `LATEST` 指针 + 按 mtime 裁剪；`extra` sideca
 ## 测试
 
 ```bash
-make check        # lint + 格式检查 + license header + 63 个单测（GPU 项自动跳过）
+make check        # lint + 格式检查 + license header + 64 个单测（GPU 项自动跳过）
 make hooks        # 安装 pre-commit 与 commit-msg 钩子
 make bench-guard  # 打印当前 GPU 是否安静到可以计时
 ```
@@ -222,4 +222,4 @@ trainer.train_step(
 
 ## 验证状态
 
-CPU 单元测试覆盖数值正确性、累积一致性、裁剪、scheduler、打包、checksum、恢复与 checkpoint artifacts（63 个，GPU 项在无卡时自动跳过）。GPU 侧做了 **RTX 3090 单卡、同模型/同 dtype/同 token 预算** 的 head-to-head（含已安装的 Megatron-Core + Transformer Engine）；多卡收敛、6D 并行、设备插件与端到端 RL 吞吐尚未验证，不应据此宣称整体性能。融合 CE 的数值与显存结论有独立测试（`tests/test_fused_ce.py`）和 TP 侧 CUDA 测试（`test/nn/test_nn_functional.py`）。
+CPU 单元测试覆盖数值正确性、累积一致性、裁剪、scheduler、打包、checksum、恢复与 checkpoint artifacts（64 个，GPU 项在无卡时自动跳过）。GPU 侧做了 **RTX 3090 单卡、同模型/同 dtype/同 token 预算** 的 head-to-head（含已安装的 Megatron-Core + Transformer Engine）；多卡收敛、6D 并行、设备插件与端到端 RL 吞吐尚未验证，不应据此宣称整体性能。融合 CE 的数值与显存结论有独立测试（`tests/test_fused_ce.py`）和 TP 侧 CUDA 测试（`test/nn/test_nn_functional.py`）。

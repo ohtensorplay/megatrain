@@ -11,9 +11,16 @@ Two things must hold before this can be called a production optimization:
 
 Both are checked here, on the GPU when one is present (the path is CUDA-only and
 falls back to the composed reference elsewhere).
+
+The kernel-dependent checks skip when the installed TensorPlay does not carry
+the local patch recorded in ``upstream-checkouts/UPSTREAMS.md``: without it,
+``F.linear_cross_entropy`` composes the reference and proves nothing about the
+kernels.  The objective-level checks run either way.
 """
 
 from __future__ import annotations
+
+import importlib.util
 
 import pytest
 import tensorplay as tp
@@ -23,6 +30,23 @@ from megatrain.losses import TensorBatch, sft_loss, sft_loss_with_head
 
 CUDA = tp.cuda.is_available()
 cuda_only = pytest.mark.skipif(not CUDA, reason="fused path needs CUDA")
+
+
+def _module_exists(name: str) -> bool:
+    """Whether an importable module exists, without importing it."""
+    try:
+        return importlib.util.find_spec(name) is not None
+    except (ImportError, ModuleNotFoundError):
+        return False
+
+
+#: Upstream TensorPlay serves ``linear_cross_entropy`` as a reference
+#: composition; only the patched tree has the kernels these tests measure.
+HAS_FUSED_KERNEL = _module_exists("tensorplay.nn._fused_ce")
+requires_fused = pytest.mark.skipif(
+    not HAS_FUSED_KERNEL,
+    reason="needs the local TensorPlay fused-CE patch (see upstream-checkouts/UPSTREAMS.md)",
+)
 
 TOKENS, HIDDEN, VOCAB = 256, 64, 4096
 
@@ -36,6 +60,7 @@ def _head_inputs(seed: int = 0, dtype=tp.float32):
     return x, w, ids
 
 
+@requires_fused
 @cuda_only
 def test_fused_linear_ce_matches_reference_loss_and_grads():
     x, w, ids = _head_inputs()
@@ -60,6 +85,7 @@ def test_fused_linear_ce_matches_reference_loss_and_grads():
         assert float((got_grad - want_grad).abs().max()) <= 1e-5 * scale + 1e-8, name
 
 
+@requires_fused
 @cuda_only
 def test_fused_linear_ce_ignores_masked_rows():
     x, w, ids = _head_inputs(1)
@@ -79,6 +105,7 @@ def test_fused_linear_ce_ignores_masked_rows():
     assert float((w.grad.float() - want_dw).abs().max()) <= 1e-5 * scale + 1e-8
 
 
+@requires_fused
 @cuda_only
 def test_fused_path_keeps_one_logits_buffer():
     """The claim: the loss does not add full-size buffers to the step."""
@@ -183,3 +210,8 @@ def test_trainer_step_with_head_loss_updates_head_and_embedding():
     assert moved_head > 0, "the head never left the loss's own buffer"
     assert moved_emb > 0, "gradient did not reach the trunk"
     assert trainer.step_count == 1
+
+
+def test_module_probe_distinguishes_present_from_absent():
+    assert _module_exists("tensorplay.nn")
+    assert not _module_exists("tensorplay.nn._definitely_not_a_module")
