@@ -8,5 +8,8 @@ build/
 dist/
 .tp_cache/
 
-# Machine-specific notes stay out of git, as Megatron-LM does with local/.
-devdocs/local/
+# Internal design / engineering notes (not for publication)
+devdocs/
+
+# Local experiment artifacts (checkpoints, datasets, logs)
+runs/
