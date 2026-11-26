@@ -25,9 +25,7 @@ __all__ = ["KL_ESTIMATORS", "approx_kl"]
 def approx_kl(logp, ref_logp, *, kl_type: str = "k3"):
     """Element-wise KL estimate for ``d = logp - ref_logp``."""
     if kl_type not in KL_ESTIMATORS:
-        raise ValueError(
-            f"unknown kl_type: {kl_type}; choose one of {', '.join(KL_ESTIMATORS)}"
-        )
+        raise ValueError(f"unknown kl_type: {kl_type}; choose one of {', '.join(KL_ESTIMATORS)}")
     delta = logp - ref_logp
     if kl_type == "k1":
         return delta

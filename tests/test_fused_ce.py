@@ -30,7 +30,7 @@ TOKENS, HIDDEN, VOCAB = 256, 64, 4096
 def _head_inputs(seed: int = 0, dtype=tp.float32):
     tp.manual_seed(seed)
     x = tp.randn(TOKENS, HIDDEN, device="cuda", dtype=dtype).requires_grad_(True)
-    w = (tp.randn(VOCAB, HIDDEN, device="cuda", dtype=dtype) * 0.02)
+    w = tp.randn(VOCAB, HIDDEN, device="cuda", dtype=dtype) * 0.02
     w.requires_grad_(True)
     ids = tp.randint(0, VOCAB, (TOKENS,), device="cuda")
     return x, w, ids
@@ -112,7 +112,7 @@ def test_fused_path_keeps_one_logits_buffer():
     # The reference holds an fp32 upcast of the logits for the softmax on top of
     # its own output; the fused walk keeps the logits and two per-row vectors,
     # so at least one fp32 logits buffer (56 MiB here) must disappear.
-    fp32_logits_mib = rows * vocab * 4 / 1024 ** 2
+    fp32_logits_mib = rows * vocab * 4 / 1024**2
     assert ref_peak - fused_peak >= 0.85 * fp32_logits_mib, (fused_peak, ref_peak)
 
 
@@ -144,6 +144,7 @@ def test_head_loss_falls_back_for_label_smoothing():
     want, _ = sft_loss(F.linear(hidden, head), tensors, label_smoothing=0.1)
     assert abs(float(got.detach()) - float(want.detach())) <= 1e-6
 
+
 class _HiddenHead(tp.nn.Module):
     """Returns hidden states; the head lives beside them, not on top."""
 
@@ -164,8 +165,7 @@ def test_trainer_step_with_head_loss_updates_head_and_embedding():
     model = _HiddenHead().to("cuda")
     trainer = BaseTrainer(model, TrainerConfig(device="cuda", learning_rate=1e-2))
     batch = collate(
-        [TrainSample([1, 2, 3, 4, 5], [0, 0, 1, 1, 1]),
-         TrainSample([6, 7, 8], [0, 1, 1])]
+        [TrainSample([1, 2, 3, 4, 5], [0, 0, 1, 1, 1]), TrainSample([6, 7, 8], [0, 1, 1])]
     )
     before_head = trainer.policy.head.weight.detach().clone()
     before_emb = trainer.policy.emb.weight.detach().clone()

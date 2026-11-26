@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import dataclasses
 import random
-from typing import Sequence
+from collections.abc import Sequence
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

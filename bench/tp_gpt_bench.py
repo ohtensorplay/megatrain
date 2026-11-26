@@ -105,9 +105,19 @@ def cross_entropy(logits, labels, chunk_tokens: int, fp32: bool = False):
 
 
 class GPT(nn.Module):
-    def __init__(self, vocab: int, seq: int, hidden: int, layers: int, heads: int,
-                 attn: str, ce_chunk: int = 0, fused_ce: bool = False,
-                 ce_fp32: bool = False, eager_ce: bool = False) -> None:
+    def __init__(
+        self,
+        vocab: int,
+        seq: int,
+        hidden: int,
+        layers: int,
+        heads: int,
+        attn: str,
+        ce_chunk: int = 0,
+        fused_ce: bool = False,
+        ce_fp32: bool = False,
+        eager_ce: bool = False,
+    ) -> None:
         super().__init__()
         self.ce_chunk = ce_chunk
         self.fused_ce = fused_ce
@@ -148,38 +158,73 @@ def main() -> None:
     parser.add_argument("--vocab", type=int, default=65536)
     parser.add_argument("--precision", choices=["fp32", "bf16"], default="bf16")
     parser.add_argument("--amp", action="store_true", help="fp32 weights + bf16 autocast")
-    parser.add_argument("--no-autocast", action="store_true",
-                        help="bf16 weights without the autocast wrapper (fewer dispatches)")
-    parser.add_argument("--ce-fp32", action="store_true",
-                        help="upcast logits to fp32 inside CE (matches Megatron's loss)")
+    parser.add_argument(
+        "--no-autocast",
+        action="store_true",
+        help="bf16 weights without the autocast wrapper (fewer dispatches)",
+    )
+    parser.add_argument(
+        "--ce-fp32",
+        action="store_true",
+        help="upcast logits to fp32 inside CE (matches Megatron's loss)",
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--attn", choices=["sdpa", "math"], default="math")
-    parser.add_argument("--ce-chunk-tokens", type=int, default=0,
-                        help="0 = monolithic cross_entropy, >0 = chunked workspace")
+    parser.add_argument(
+        "--ce-chunk-tokens",
+        type=int,
+        default=0,
+        help="0 = monolithic cross_entropy, >0 = chunked workspace",
+    )
     parser.add_argument("--lr", type=float, default=1e-5)
-    parser.add_argument("--accum", type=int, default=1,
-                        help="micro-batches per optimizer step (amortizes optimizer)")
+    parser.add_argument(
+        "--accum",
+        type=int,
+        default=1,
+        help="micro-batches per optimizer step (amortizes optimizer)",
+    )
     parser.add_argument("--compile", action="store_true", help="wrap the forward in tp.compile")
-    parser.add_argument("--fused-ce", action="store_true",
-                        help="F.linear_cross_entropy (fused head+CE, no logits tensor)")
-    parser.add_argument("--eager-ce", action="store_true",
-                        help="return trunk states from the (compiled) forward and "
-                             "apply head+CE outside it, as Megatron does")
+    parser.add_argument(
+        "--fused-ce",
+        action="store_true",
+        help="F.linear_cross_entropy (fused head+CE, no logits tensor)",
+    )
+    parser.add_argument(
+        "--eager-ce",
+        action="store_true",
+        help="return trunk states from the (compiled) forward and "
+        "apply head+CE outside it, as Megatron does",
+    )
     parser.add_argument("--compile-fullgraph", action="store_true")
     parser.add_argument("--compile-max-autotune", action="store_true")
-    parser.add_argument("--cuda-graph", action="store_true",
-                        help="capture the whole step in a CUDA graph (needs capturable Adam)")
-    parser.add_argument("--fused-adam", action="store_true",
-                        help="tp.optim.AdamW(fused=True, capturable=True)")
-    parser.add_argument("--compile-dynamic", action="store_true",
-                        help="tp.compile(dynamic=True), for variable shapes/packed batches")
+    parser.add_argument(
+        "--cuda-graph",
+        action="store_true",
+        help="capture the whole step in a CUDA graph (needs capturable Adam)",
+    )
+    parser.add_argument(
+        "--fused-adam", action="store_true", help="tp.optim.AdamW(fused=True, capturable=True)"
+    )
+    parser.add_argument(
+        "--compile-dynamic",
+        action="store_true",
+        help="tp.compile(dynamic=True), for variable shapes/packed batches",
+    )
     args = parser.parse_args()
     tp.manual_seed(args.seed)
 
     torch_dtype = tp.bfloat16 if args.precision == "bf16" else tp.float32
     model = GPT(
-        args.vocab, args.seq, args.hidden, args.layers, args.heads, args.attn,
-        args.ce_chunk_tokens, args.fused_ce, args.ce_fp32, args.eager_ce,
+        args.vocab,
+        args.seq,
+        args.hidden,
+        args.layers,
+        args.heads,
+        args.attn,
+        args.ce_chunk_tokens,
+        args.fused_ce,
+        args.ce_fp32,
+        args.eager_ce,
     ).to("cuda")
     if not args.amp:
         model = model.to(torch_dtype)
@@ -247,6 +292,7 @@ def main() -> None:
 
         loss = step()
     else:
+
         def step():
             return float(raw_step().detach())
 

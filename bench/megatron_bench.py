@@ -63,7 +63,9 @@ def init_parallel() -> None:
         world = int(os.environ.get("WORLD_SIZE", "1"))
         torch.cuda.set_device(rank)
         torch.distributed.init_process_group(
-            backend="nccl", rank=rank, world_size=world,
+            backend="nccl",
+            rank=rank,
+            world_size=world,
             init_method="tcp://127.0.0.1:29501",
         )
     parallel_state.destroy_model_parallel()
@@ -119,12 +121,20 @@ def main() -> None:
     parser.add_argument("--vocab", type=int, default=65536)
     parser.add_argument("--flash", action="store_true", help="use flash attention if available")
     parser.add_argument("--te", action="store_true", help="use Transformer Engine layer spec")
-    parser.add_argument("--fused-adam", action="store_true",
-                        help="use Transformer Engine FusedAdam (vendor-best optimizer)")
-    parser.add_argument("--no-autocast", action="store_true",
-                        help="bf16 params without the autocast wrapper")
-    parser.add_argument("--precision", choices=["fp32", "bf16"], default="fp32",
-                        help="bf16 needs Transformer Engine; fp32 is the no-TE fallback")
+    parser.add_argument(
+        "--fused-adam",
+        action="store_true",
+        help="use Transformer Engine FusedAdam (vendor-best optimizer)",
+    )
+    parser.add_argument(
+        "--no-autocast", action="store_true", help="bf16 params without the autocast wrapper"
+    )
+    parser.add_argument(
+        "--precision",
+        choices=["fp32", "bf16"],
+        default="fp32",
+        help="bf16 needs Transformer Engine; fp32 is the no-TE fallback",
+    )
     args = parser.parse_args()
 
     init_parallel()
@@ -139,18 +149,17 @@ def main() -> None:
     # GPTModel expects [batch, seq] (current_batch_size = input_ids.shape[0]).
     tokens = torch.randint(0, args.vocab, (args.batch, args.seq), dtype=torch.long, device="cuda")
     labels = tokens.clone()
-    position_ids = (
-        torch.arange(args.seq, device="cuda").unsqueeze(0).expand(args.batch, -1)
-    )
+    position_ids = torch.arange(args.seq, device="cuda").unsqueeze(0).expand(args.batch, -1)
     # Attention scores are [batch, heads, query_seq, key_seq].
-    attention_mask = (
-        torch.ones((args.batch, 1, 1, args.seq), dtype=torch.bool, device="cuda").tril()
-    )
+    attention_mask = torch.ones(
+        (args.batch, 1, 1, args.seq), dtype=torch.bool, device="cuda"
+    ).tril()
 
     def step():
         optimizer.zero_grad(set_to_none=True)
         with torch.autocast(
-            "cuda", dtype=torch.bfloat16,
+            "cuda",
+            dtype=torch.bfloat16,
             enabled=args.precision == "bf16" and not args.no_autocast,
         ):
             output = model(tokens, position_ids, attention_mask, labels=labels)
@@ -197,7 +206,7 @@ def main() -> None:
                 "step_ms": round(elapsed / args.steps * 1000, 2),
                 "tokens_per_second": round(token_count / elapsed, 1),
                 "peak_memory_mib": round(torch.cuda.max_memory_allocated() / 1024**2, 1),
-        "total_peak_mib": round(total_peak_mib, 1),
+                "total_peak_mib": round(total_peak_mib, 1),
             },
             indent=2,
         )

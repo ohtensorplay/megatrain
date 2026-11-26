@@ -46,34 +46,71 @@ def _te_usable() -> bool:
 
 def build_cases(te: bool, g: dict, preset: str) -> list[tuple[str, str, list[str]]]:
     common = [
-        "--steps", "{steps}",
-        "--seq", str(g["seq"]),
-        "--batch", str(g["batch"]),
-        "--hidden", str(g["hidden"]),
-        "--layers", str(g["layers"]),
-        "--heads", str(g["heads"]),
-        "--vocab", str(g["vocab"]),
+        "--steps",
+        "{steps}",
+        "--seq",
+        str(g["seq"]),
+        "--batch",
+        str(g["batch"]),
+        "--hidden",
+        str(g["hidden"]),
+        "--layers",
+        str(g["layers"]),
+        "--heads",
+        str(g["heads"]),
+        "--vocab",
+        str(g["vocab"]),
     ]
     base_tp = [sys.executable, "bench/tp_gpt_bench.py", *common]
     base_mg = [sys.executable, "bench/megatron_bench.py", *common]
     out = [
         ("megatron-core", "bf16 + unfused math attn", base_mg + ["--precision", "bf16"]),
-        ("tensorplay", "bf16 + math attn (identical arithmetic)",
-         base_tp + ["--precision", "bf16", "--attn", "math"]),
-        ("tensorplay", "bf16 + SDPA attn (production)",
-         base_tp + ["--precision", "bf16", "--attn", "sdpa"]),
-        ("tensorplay", "bf16 + SDPA + tp.compile(dynamic=False)",
-         base_tp + ["--precision", "bf16", "--attn", "sdpa", "--compile"]),
-        ("tensorplay", "bf16 + SDPA + compile + fused AdamW",
-         base_tp + ["--precision", "bf16", "--attn", "sdpa", "--compile", "--fused-adam"]),
-        ("tensorplay", "bf16 + SDPA + fused CE + fused AdamW (best)",
-         base_tp + ["--precision", "bf16", "--attn", "sdpa", "--eager-ce",
-                    "--fused-ce", "--fused-adam"]),
-        ("tensorplay", "bf16 + SDPA + compiled trunk + fused CE + fused AdamW",
-         base_tp + ["--precision", "bf16", "--attn", "sdpa", "--compile",
-                    "--eager-ce", "--fused-ce", "--fused-adam"]),
-        ("tensorplay", "fp32 params + bf16 AMP + SDPA",
-         base_tp + ["--precision", "bf16", "--amp", "--attn", "sdpa"]),
+        (
+            "tensorplay",
+            "bf16 + math attn (identical arithmetic)",
+            base_tp + ["--precision", "bf16", "--attn", "math"],
+        ),
+        (
+            "tensorplay",
+            "bf16 + SDPA attn (production)",
+            base_tp + ["--precision", "bf16", "--attn", "sdpa"],
+        ),
+        (
+            "tensorplay",
+            "bf16 + SDPA + tp.compile(dynamic=False)",
+            base_tp + ["--precision", "bf16", "--attn", "sdpa", "--compile"],
+        ),
+        (
+            "tensorplay",
+            "bf16 + SDPA + compile + fused AdamW",
+            base_tp + ["--precision", "bf16", "--attn", "sdpa", "--compile", "--fused-adam"],
+        ),
+        (
+            "tensorplay",
+            "bf16 + SDPA + fused CE + fused AdamW (best)",
+            base_tp
+            + ["--precision", "bf16", "--attn", "sdpa", "--eager-ce", "--fused-ce", "--fused-adam"],
+        ),
+        (
+            "tensorplay",
+            "bf16 + SDPA + compiled trunk + fused CE + fused AdamW",
+            base_tp
+            + [
+                "--precision",
+                "bf16",
+                "--attn",
+                "sdpa",
+                "--compile",
+                "--eager-ce",
+                "--fused-ce",
+                "--fused-adam",
+            ],
+        ),
+        (
+            "tensorplay",
+            "fp32 params + bf16 AMP + SDPA",
+            base_tp + ["--precision", "bf16", "--amp", "--attn", "sdpa"],
+        ),
         ("megatron-core", "fp32", base_mg + ["--precision", "fp32"]),
         ("tensorplay", "fp32 + math attn", base_tp + ["--precision", "fp32", "--attn", "math"]),
     ]
@@ -82,13 +119,19 @@ def build_cases(te: bool, g: dict, preset: str) -> list[tuple[str, str, list[str
     if te:
         out.insert(
             0,
-            ("megatron-core", "bf16 + TE + FusedAdam (vendor best)",
-             base_mg + ["--precision", "bf16", "--te", "--fused-adam"]),
+            (
+                "megatron-core",
+                "bf16 + TE + FusedAdam (vendor best)",
+                base_mg + ["--precision", "bf16", "--te", "--fused-adam"],
+            ),
         )
         out.insert(
             0,
-            ("megatron-core", "bf16 + Transformer Engine",
-             base_mg + ["--precision", "bf16", "--te"]),
+            (
+                "megatron-core",
+                "bf16 + Transformer Engine",
+                base_mg + ["--precision", "bf16", "--te"],
+            ),
         )
     return out
 
@@ -104,9 +147,9 @@ def _gpu_util_pct() -> int | None:
     """Whole-GPU utilization from nvidia-smi, or None if it cannot be read."""
     try:
         raw = subprocess.check_output(
-            ["nvidia-smi", "--query-gpu=utilization.gpu",
-             "--format=csv,noheader,nounits"],
-            text=True, timeout=10,
+            ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
+            text=True,
+            timeout=10,
         )
         return int(raw.strip().splitlines()[0])
     except Exception:  # noqa: BLE001 - best-effort guard
@@ -146,8 +189,15 @@ def _wait_quiet(min_free_mib: int, budget_s: int = 1800) -> None:
             )
 
 
-def measure(stack: str, label: str, template: list[str], steps: int, repeat: int,
-            env: dict[str, str], min_free_mib: int = 0) -> dict:
+def measure(
+    stack: str,
+    label: str,
+    template: list[str],
+    steps: int,
+    repeat: int,
+    env: dict[str, str],
+    min_free_mib: int = 0,
+) -> dict:
     cmd = [part.replace("{steps}", str(steps)) for part in template]
     runs = []
     for index in range(repeat):
@@ -161,11 +211,9 @@ def measure(stack: str, label: str, template: list[str], steps: int, repeat: int
                 # a quiet window and redo the rep instead of recording failure.
                 if "out of memory" not in str(exc).lower() or attempt == 2:
                     raise
-                print("  OOM (GPU got busy mid-run); retrying after a quiet window…",
-                      flush=True)
+                print("  OOM (GPU got busy mid-run); retrying after a quiet window…", flush=True)
                 time.sleep(20)
-        print(f"  run {index + 1}/{repeat}: {runs[-1]['tokens_per_second']:,.0f} tok/s",
-              flush=True)
+        print(f"  run {index + 1}/{repeat}: {runs[-1]['tokens_per_second']:,.0f} tok/s", flush=True)
     tps = [r["tokens_per_second"] for r in runs]
     row = {
         "stack": stack,
@@ -177,7 +225,9 @@ def measure(stack: str, label: str, template: list[str], steps: int, repeat: int
         "best_tokens_per_second": round(max(tps), 1),
         "step_ms": round(statistics.median(r["step_ms"] for r in runs), 2),
         "peak_memory_mib": round(statistics.median(r["peak_memory_mib"] for r in runs), 1),
-        "total_peak_mib": round(statistics.median(r.get("total_peak_mib", r["peak_memory_mib"]) for r in runs), 1),
+        "total_peak_mib": round(
+            statistics.median(r.get("total_peak_mib", r["peak_memory_mib"]) for r in runs), 1
+        ),
         "loss": runs[0]["loss"],
         "runs_tok_per_s": [round(t, 1) for t in tps],
         "spread_pct": round((max(tps) - min(tps)) / statistics.median(tps) * 100, 1),
@@ -194,10 +244,18 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=12)
     parser.add_argument("--repeat", type=int, default=3)
     parser.add_argument("--json-out", default="bench/results/compare.json")
-    parser.add_argument("--min-free-mib", type=int, default=20000,
-                        help="abort if another process holds GPU memory (invalid timings)")
-    parser.add_argument("--preset", choices=["full", "bf16"], default="full",
-                        help="bf16: only the three bf16 cases (large-model runs)")
+    parser.add_argument(
+        "--min-free-mib",
+        type=int,
+        default=20000,
+        help="abort if another process holds GPU memory (invalid timings)",
+    )
+    parser.add_argument(
+        "--preset",
+        choices=["full", "bf16"],
+        default="full",
+        help="bf16: only the three bf16 cases (large-model runs)",
+    )
     for key, value in GEOMETRY.items():
         parser.add_argument(f"--{key}", type=int, default=value)
     args = parser.parse_args()
@@ -210,8 +268,7 @@ def main() -> None:
 
     rows = []
     for stack, label, template in build_cases(te, geometry, args.preset):
-        row = measure(stack, label, template, args.steps, args.repeat, env,
-                      args.min_free_mib)
+        row = measure(stack, label, template, args.steps, args.repeat, env, args.min_free_mib)
         rows.append(row)
         print(
             f"{label:<40} {row['tokens_per_second']:>9,.0f} tok/s  "
@@ -220,7 +277,10 @@ def main() -> None:
             flush=True,
         )
 
-    print("\n| stack | setup | params M | tokens/s | step ms | step peak MiB | total peak MiB | spread |")
+    print(
+        "\n| stack | setup | params M | tokens/s | step ms | step peak MiB |"
+        " total peak MiB | spread |"
+    )
     print("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |")
     for r in rows:
         print(

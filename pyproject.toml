@@ -15,6 +15,13 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
+dev = [
+    "pre-commit>=3.7",
+    "pytest>=8",
+    "ruff>=0.16",
+    "build>=1.2",
+    "twine>=5",
+]
 
 [project.urls]
 Homepage = "https://github.com/ohtensorplay/megatrain"
@@ -25,8 +32,18 @@ Issues = "https://github.com/ohtensorplay/megatrain/issues"
 where = ["src"]
 
 [tool.pytest.ini_options]
-addopts = "-ra"
 testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+# The pinned upstream checkouts under upstream-checkouts/ keep their own configs.
+extend-exclude = ["upstream-checkouts", "build", "dist"]
 
 [tool.ruff.lint]
-select = ["E9", "F63", "F7", "F82"]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# megatron_bench.py sets the NVTE/Transformer Engine paths before importing
+# torch, so its imports are deliberately not at the top of the file.
+"bench/megatron_bench.py" = ["E402"]

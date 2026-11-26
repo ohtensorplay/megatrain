@@ -16,9 +16,10 @@ import hashlib
 import json
 import os
 import random
+from collections.abc import Callable
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import tensorplay as tp
 
@@ -284,9 +285,7 @@ class BaseTrainer:
         batch_size = int(batch.input_ids.shape[0]) if tensor_input else batch.size
         n = min(cfg.gradient_accumulation_steps, batch_size)
         size = (batch_size + n - 1) // n
-        spans = [
-            (start, min(start + size, batch_size)) for start in range(0, batch_size, size)
-        ]
+        spans = [(start, min(start + size, batch_size)) for start in range(0, batch_size, size)]
         micros: list = []
         micro_tensors: list = []
         if tensor_input:
@@ -309,13 +308,15 @@ class BaseTrainer:
             and "teacher_logprobs" not in kwargs
         ):
             with tp.no_grad():
-                teacher_input = batch if tensor_input else self.tensor_batch_cls(batch, device=device)
+                teacher_input = (
+                    batch if tensor_input else self.tensor_batch_cls(batch, device=device)
+                )
                 extra["teacher_logprobs"] = self._teacher_logprobs(teacher_input)
 
         self.optimizer.zero_grad(set_to_none=True)
         loss_sum = 0.0
         diag_accum: dict[str, float] = {}
-        for index, ((start, stop), keep) in enumerate(zip(spans, micro_keeps)):
+        for index, ((start, stop), keep) in enumerate(zip(spans, micro_keeps, strict=True)):
             tensors = (
                 micro_tensors[index]
                 if tensor_input
@@ -325,9 +326,7 @@ class BaseTrainer:
                 self._device_type, dtype=self._amp_dtype, enabled=self._amp_enabled
             ):
                 logits = (
-                    self._compiled(tensors.input_ids)
-                    if self._compiled
-                    else self._forward(tensors)
+                    self._compiled(tensors.input_ids) if self._compiled else self._forward(tensors)
                 )
             fn_kwargs = dict(kwargs)
             for key, value in extra.items():
@@ -351,11 +350,7 @@ class BaseTrainer:
         grad_norm = None
         if cfg.max_grad_norm is not None:
             grad_norm = tp.nn.utils.clip_grad_norm_(
-                [
-                    param
-                    for group in self.optimizer.param_groups
-                    for param in group["params"]
-                ],
+                [param for group in self.optimizer.param_groups for param in group["params"]],
                 cfg.max_grad_norm,
             )
         if not dry_run:
@@ -536,7 +531,9 @@ def _restore_rng(state: dict) -> None:
         return
     if "numpy" in state:
         arr = np.random.get_state()
-        np.random.set_state((arr[0], np.array(state["numpy"], dtype=np.uint32), arr[2], arr[3], arr[4]))
+        np.random.set_state(
+            (arr[0], np.array(state["numpy"], dtype=np.uint32), arr[2], arr[3], arr[4])
+        )
 
 
 def _rmtree(path: Path) -> None:

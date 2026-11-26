@@ -47,7 +47,7 @@ def peak_mib(fn) -> float:
     tp.cuda.reset_peak_memory_stats()
     fn()
     tp.cuda.synchronize()
-    return tp.cuda.max_memory_allocated() / 1024 ** 2
+    return tp.cuda.max_memory_allocated() / 1024**2
 
 
 def main() -> None:
@@ -61,8 +61,11 @@ def main() -> None:
     p.add_argument("--iters", type=int, default=10)
     args = p.parse_args()
 
-    model = GPT(args.vocab, args.seq, args.hidden, args.layers, args.heads,
-                "sdpa", eager_ce=True).to("cuda").to(tp.bfloat16)
+    model = (
+        GPT(args.vocab, args.seq, args.hidden, args.layers, args.heads, "sdpa", eager_ce=True)
+        .to("cuda")
+        .to(tp.bfloat16)
+    )
     ids = tp.randint(0, args.vocab, (args.batch, args.seq), device="cuda")
     pos = tp.arange(args.seq, device="cuda").unsqueeze(0).expand(args.batch, -1)
     mask = tp.ones((1, 1, args.seq, args.seq), dtype=tp.bool, device="cuda").tril()
@@ -122,17 +125,20 @@ def main() -> None:
     print(f"\n{'segment':<26}{'fwd ms':>9}{'fwd+bwd ms':>12}{'peak MiB':>11}")
     print(f"{'trunk':<26}{trunk_f:>9.2f}{'-':>12}")
     print(f"{'head (hidden->vocab)':<26}{head_f:>9.2f}{head_fb_ms:>12.2f}")
-    print(f"{'cross_entropy (logits)':<26}{ce_f:>9.2f}{ce_fb_ms:>12.2f}"
-          f"{peak_mib(ce_fb):>11.0f}")
+    print(f"{'cross_entropy (logits)':<26}{ce_f:>9.2f}{ce_fb_ms:>12.2f}{peak_mib(ce_fb):>11.0f}")
     print(f"{'head+ce reference':<26}{head_f + ce_f:>9.2f}{head_fb_ms + ce_fb_ms:>12.2f}")
-    print(f"{'head+ce fused':<26}{fused_f:>9.2f}{fused_fb_ms:>12.2f}"
-          f"{peak_mib(fused_fb):>11.0f}")
-    print(f"\nforward total: {(trunk_f + head_f + ce_f):.2f} ms -> "
-          f"{(trunk_f + fused_f):.2f} ms fused")
-    print(f"ce share of forward: {(head_f + ce_f) / (trunk_f + head_f + ce_f) * 100:.0f}% "
-          f"-> {fused_f / (trunk_f + fused_f) * 100:.0f}% fused")
-    print(f"head+ce fwd+bwd: {head_fb_ms + ce_fb_ms:.2f} -> {fused_fb_ms:.2f} ms "
-          f"({(head_fb_ms + ce_fb_ms) / fused_fb_ms:.2f}x)")
+    print(f"{'head+ce fused':<26}{fused_f:>9.2f}{fused_fb_ms:>12.2f}{peak_mib(fused_fb):>11.0f}")
+    print(
+        f"\nforward total: {(trunk_f + head_f + ce_f):.2f} ms -> {(trunk_f + fused_f):.2f} ms fused"
+    )
+    print(
+        f"ce share of forward: {(head_f + ce_f) / (trunk_f + head_f + ce_f) * 100:.0f}% "
+        f"-> {fused_f / (trunk_f + fused_f) * 100:.0f}% fused"
+    )
+    print(
+        f"head+ce fwd+bwd: {head_fb_ms + ce_fb_ms:.2f} -> {fused_fb_ms:.2f} ms "
+        f"({(head_fb_ms + ce_fb_ms) / fused_fb_ms:.2f}x)"
+    )
 
 
 if __name__ == "__main__":

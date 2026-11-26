@@ -38,9 +38,7 @@ class TensorBatch:
 
     def __init__(self, batch: TrainBatch, device: str = "cpu") -> None:
         self.input_ids = tp.tensor(batch.input_ids, dtype=tp.long, device=device)
-        self.attention_mask = tp.tensor(
-            batch.attention_mask, dtype=tp.float32, device=device
-        )
+        self.attention_mask = tp.tensor(batch.attention_mask, dtype=tp.float32, device=device)
         self.loss_mask = tp.tensor(batch.loss_mask, dtype=tp.float32, device=device)
         self.cu_seqlens = tp.tensor(batch.cu_seqlens, dtype=tp.long, device=device)
         self.max_len = batch.max_len
@@ -108,16 +106,17 @@ def sft_loss(
         raise ValueError("ce_impl='logsumexp' requires label_smoothing == 0")
 
     def _native(rows, targets, mask_rows):
-        return F.cross_entropy(
-            rows, targets, reduction="none", label_smoothing=label_smoothing
-        )
+        return F.cross_entropy(rows, targets, reduction="none", label_smoothing=label_smoothing)
 
     def _native_ignore(rows, targets, mask_rows):
         # CE with ignore_index zeroes masked targets inside the native kernel,
         # removing one elementwise multiply from the common SFT path.
         safe = targets.masked_fill(mask_rows == 0, -100)
         return F.cross_entropy(
-            rows, safe, reduction="none", ignore_index=-100,
+            rows,
+            safe,
+            reduction="none",
+            ignore_index=-100,
             label_smoothing=label_smoothing,
         )
 
@@ -146,9 +145,7 @@ def sft_loss(
         token_ce = compute(flat_logits, flat_ids, flat_mask).reshape(shift_mask.shape)
     keep = shift_mask.to(token_ce.dtype)
     denom = keep.sum().clamp(min=1.0)
-    numerator = (
-        token_ce.sum() if ce_impl == "native_ignore" else (token_ce * keep).sum()
-    )
+    numerator = token_ce.sum() if ce_impl == "native_ignore" else (token_ce * keep).sum()
     ce = numerator / denom
     loss = ce
     diag = {"ce": ce.detach(), "tokens": keep.sum().detach()}
@@ -199,8 +196,11 @@ def sft_loss_with_head(
     if teacher_logprobs is not None and distill_coef:
         logits = F.linear(hidden, head_weight, head_bias)
         return sft_loss(
-            logits, batch, teacher_logprobs=teacher_logprobs,
-            distill_coef=distill_coef, kl_type=kl_type,
+            logits,
+            batch,
+            teacher_logprobs=teacher_logprobs,
+            distill_coef=distill_coef,
+            kl_type=kl_type,
             label_smoothing=label_smoothing,
         )
     if label_smoothing:
@@ -214,8 +214,12 @@ def sft_loss_with_head(
     targets = ids.masked_fill(mask == 0, -100)
     rows = hidden[:, :-1, :].reshape(-1, hidden.shape[-1])
     token_ce = F.linear_cross_entropy(
-        rows, head_weight, targets, linear_bias=head_bias,
-        ignore_index=-100, reduction="none",
+        rows,
+        head_weight,
+        targets,
+        linear_bias=head_bias,
+        ignore_index=-100,
+        reduction="none",
     )
     keep = mask.to(token_ce.dtype)
     denom = keep.sum().clamp(min=1.0)

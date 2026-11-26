@@ -41,9 +41,7 @@ def _first_lines(path: Path, count: int = 5) -> list[str]:
 def has_header(path: Path) -> bool:
     lines = _first_lines(path)
     seen = [line.strip() for line in lines if not line.strip().startswith(PREAMBLE)]
-    return any(line == COPYRIGHT for line in seen) and any(
-        line == LICENSE for line in seen
-    )
+    return any(line == COPYRIGHT for line in seen) and any(line == LICENSE for line in seen)
 
 
 def iter_sources(paths: list[Path]) -> list[Path]:
@@ -55,9 +53,7 @@ def iter_sources(paths: list[Path]) -> list[Path]:
         if not base.is_dir():
             continue
         found.extend(
-            path
-            for path in sorted(base.rglob("*"))
-            if path.is_file() and path.suffix in SUFFIXES
+            path for path in sorted(base.rglob("*")) if path.is_file() and path.suffix in SUFFIXES
         )
     return found
 

@@ -64,13 +64,17 @@ def main() -> None:
     pos = tp.arange(seq, device="cuda").unsqueeze(0).expand(batch, -1)
     mask = tp.ones((1, 1, seq, seq), dtype=tp.bool, device="cuda").tril()
 
-    x = model.ln_f(
-        (lambda h: h)(  # trunk output, detached so only head/CE differ
-            (lambda h0: [b(h0, mask) for b in model.blocks][-1])(
-                model.tok(tokens) + model.pos(pos)
+    x = (
+        model.ln_f(
+            (lambda h: h)(  # trunk output, detached so only head/CE differ
+                (lambda h0: [b(h0, mask) for b in model.blocks][-1])(
+                    model.tok(tokens) + model.pos(pos)
+                )
             )
         )
-    ).detach().requires_grad_(True)
+        .detach()
+        .requires_grad_(True)
+    )
     weight = model.head.weight
     target = labels.reshape(-1)
 
@@ -122,8 +126,11 @@ def main() -> None:
     for name, fn in (("cross_entropy", ref), ("inplace_ce", fused)):
         tp.cuda.synchronize()
         tp.cuda.reset_peak_memory_stats()
-        ms = timed(lambda: fwd_bwd(fn))
-        print(f"{name:<14} head+ce fwd+bwd {ms:6.2f} ms  peak {tp.cuda.max_memory_allocated()/1024**2:7.0f} MiB")
+        ms = timed(lambda fn=fn: fwd_bwd(fn))
+        print(
+            f"{name:<14} head+ce fwd+bwd {ms:6.2f} ms  peak "
+            f"{tp.cuda.max_memory_allocated() / 1024**2:7.0f} MiB"
+        )
 
 
 if __name__ == "__main__":

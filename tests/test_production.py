@@ -64,14 +64,12 @@ def test_gradient_clipping_is_enforced_and_reported(policy):
         for p in trainer.policy.parameters()
         if p.grad is not None
     )
-    assert total_sq ** 0.5 <= 1e-3 + 1e-5
+    assert total_sq**0.5 <= 1e-3 + 1e-5
 
 
 def test_scheduler_is_stepped_and_checkpointed(tmp_path):
     tp_scheduler = TinyScheduler()
-    trainer = BaseTrainer(
-        TinyPolicy(), TrainerConfig(learning_rate=1e-2), scheduler=tp_scheduler
-    )
+    trainer = BaseTrainer(TinyPolicy(), TrainerConfig(learning_rate=1e-2), scheduler=tp_scheduler)
     batch = pack_samples(samples(), 8, shuffle=False)[0]
     trainer.train_step(batch)
     trainer.train_step(batch)
@@ -89,9 +87,7 @@ def test_fit_streams_metrics_and_publishes_checkpoints(tmp_path):
         TinyPolicy(),
         TrainerConfig(learning_rate=1e-2, checkpoint_dir=str(tmp_path)),
     )
-    metrics = list(
-        trainer.fit(samples(), max_tokens=8, epochs=2, seed=3, checkpoint_every=1)
-    )
+    metrics = list(trainer.fit(samples(), max_tokens=8, epochs=2, seed=3, checkpoint_every=1))
     assert len(metrics) >= 2
     assert trainer.step_count == len(metrics)
     assert (tmp_path / f"step-{trainer.step_count}").exists()
@@ -134,7 +130,7 @@ def test_ce_chunking_matches_unchunked_loss_and_grads(policy):
     full_grads = [p.grad.detach().clone() for p in policy.parameters()]
     policy.zero_grad()
     chunked.backward()
-    for expected, actual in zip(full_grads, [p.grad for p in policy.parameters()]):
+    for expected, actual in zip(full_grads, [p.grad for p in policy.parameters()], strict=True):
         assert float((expected - actual).abs().sum()) == pytest.approx(0.0, abs=1e-6)
 
 
@@ -172,9 +168,9 @@ def test_device_tensor_batch_path_matches_host_batch_path():
 
     host_batch = collate(samples()[:2])
     tp.manual_seed(1234)
-    host_metrics = BaseTrainer(
-        TinyPolicy(), TrainerConfig(learning_rate=1e-2)
-    ).train_step(host_batch, dry_run=True)
+    host_metrics = BaseTrainer(TinyPolicy(), TrainerConfig(learning_rate=1e-2)).train_step(
+        host_batch, dry_run=True
+    )
     tp.manual_seed(1234)
     trainer = BaseTrainer(TinyPolicy(), TrainerConfig(learning_rate=1e-2))
     metrics_device = trainer.train_step(TensorBatch(host_batch), dry_run=True)
@@ -184,9 +180,7 @@ def test_device_tensor_batch_path_matches_host_batch_path():
 def test_seeded_trainers_are_reproducible():
     def run():
         tp.manual_seed(1234)  # model weights are created before the trainer seeds RNGs
-        trainer = BaseTrainer(
-            TinyPolicy(), TrainerConfig(learning_rate=1e-2, seed=1234)
-        )
+        trainer = BaseTrainer(TinyPolicy(), TrainerConfig(learning_rate=1e-2, seed=1234))
         return trainer.train_step(pack_samples(samples(), 8, shuffle=False)[0])
 
     assert run()["train/loss"] == pytest.approx(run()["train/loss"], abs=1e-7)

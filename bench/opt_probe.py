@@ -19,7 +19,6 @@ import time
 from pathlib import Path
 
 import tensorplay as tp
-import tensorplay.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tp_gpt_bench import GPT  # noqa: E402
@@ -75,9 +74,9 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             print(f"{name:<18} unsupported: {type(exc).__name__}: {exc}")
             continue
-        step_ms = timed(lambda: (fwd_bwd(opt), opt.step()), args.iters)
-        fwb_ms = timed(lambda: fwd_bwd(opt), args.iters)
-        opt_only = timed(lambda: opt.step(), args.iters)
+        step_ms = timed(lambda opt=opt: (fwd_bwd(opt), opt.step()), args.iters)
+        fwb_ms = timed(lambda opt=opt: fwd_bwd(opt), args.iters)
+        opt_only = timed(lambda opt=opt: opt.step(), args.iters)
         print(
             f"{name:<18} step={step_ms:7.2f} ms  fwd+bwd={fwb_ms:7.2f} ms  "
             f"opt={opt_only:5.2f} ms  -> {token_count / (step_ms / 1000):,.0f} tok/s"

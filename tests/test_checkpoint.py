@@ -99,5 +99,6 @@ def test_checkpoint_artifacts_are_hashed_and_restored(tmp_path):
         for a, b in zip(
             fresh_critic.head.weight.detach().flatten().tolist(),
             critic.head.weight.detach().flatten().tolist(),
+            strict=True,
         )
     )

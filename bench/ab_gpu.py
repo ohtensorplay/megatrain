@@ -23,19 +23,16 @@ import time
 
 import tensorplay as tp
 import tensorplay.nn.functional as F
+from bench_step import BenchPolicy, make_samples
 
 from megatrain import BaseTrainer, TensorBatch, TrainerConfig, sft_loss
-
-from bench_step import BenchPolicy, make_samples
 
 
 def legacy_loss(logits, tensors):
     """Old path: materialize the full [B, L, vocab] log_softmax."""
     shift_logits = logits[:, :-1, :]
     shift_ids = tensors.input_ids[:, 1:]
-    logps = tp.gather(
-        F.log_softmax(shift_logits, dim=-1), -1, shift_ids.unsqueeze(-1)
-    ).squeeze(-1)
+    logps = tp.gather(F.log_softmax(shift_logits, dim=-1), -1, shift_ids.unsqueeze(-1)).squeeze(-1)
     mask = tensors.loss_mask[:, 1:]
     loss = -(logps * mask).sum() / mask.sum().clamp(min=1.0)
     return loss, {"ce": loss.detach(), "tokens": mask.sum().detach()}
@@ -86,11 +83,13 @@ def main() -> None:
             gradient_accumulation_steps=args.accum,
             amp=amp,
             amp_dtype=amp_dtype,
-            compile_policy=name in (
+            compile_policy=name
+            in (
                 "optimized_amp_bf16_compile",
                 "optimized_amp_bf16_compile_fused",
             ),
-            fused_optimizer=name in (
+            fused_optimizer=name
+            in (
                 "optimized_amp_bf16_fused",
                 "optimized_amp_bf16_compile_fused",
             ),
@@ -131,13 +130,13 @@ def main() -> None:
         )
     base = results[0]
     for row in results[1:]:
-        row["speedup_vs_legacy"] = round(
-            row["tokens_per_second"] / base["tokens_per_second"], 3
+        row["speedup_vs_legacy"] = round(row["tokens_per_second"] / base["tokens_per_second"], 3)
+        row["peak_mem_saved_mib"] = round(base["peak_memory_mib"] - row["peak_memory_mib"], 1)
+    print(
+        json.dumps(
+            {"gpu": tp.cuda.get_device_name(0), "config": vars(args), "results": results}, indent=2
         )
-        row["peak_mem_saved_mib"] = round(
-            base["peak_memory_mib"] - row["peak_memory_mib"], 1
-        )
-    print(json.dumps({"gpu": tp.cuda.get_device_name(0), "config": vars(args), "results": results}, indent=2))
+    )
 
 
 if __name__ == "__main__":
