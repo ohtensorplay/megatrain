@@ -1,0 +1,210 @@
+{
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "geometry": {
+    "seq": 1024,
+    "batch": 4,
+    "hidden": 1024,
+    "layers": 2,
+    "heads": 8,
+    "vocab": 65536
+  },
+  "steps_per_run": 12,
+  "repeat": 3,
+  "transformer_engine": true,
+  "rows": [
+    {
+      "stack": "megatron-core",
+      "label": "bf16 + Transformer Engine",
+      "params_m": 160.46,
+      "tokens_per_second": 66955.8,
+      "best_tokens_per_second": 67015.7,
+      "step_ms": 61.17,
+      "peak_memory_mib": 2769.0,
+      "total_peak_mib": 2769.0,
+      "loss": 11.02166,
+      "runs_tok_per_s": [
+        67015.7,
+        66955.8,
+        66586.1
+      ],
+      "spread_pct": 0.6,
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "transformer_engine": true,
+      "te_layers": [
+        "FlashAttention",
+        "FusedAttention",
+        "FusedScaleMaskSoftmax",
+        "LayerNorm",
+        "UnfusedDotProductAttention"
+      ]
+    },
+    {
+      "stack": "megatron-core",
+      "label": "bf16 + TE + FusedAdam (vendor best)",
+      "params_m": 160.46,
+      "tokens_per_second": 70254.5,
+      "best_tokens_per_second": 70269.8,
+      "step_ms": 58.3,
+      "peak_memory_mib": 3377.2,
+      "total_peak_mib": 3377.2,
+      "loss": 10.99758,
+      "runs_tok_per_s": [
+        70075.4,
+        70254.5,
+        70269.8
+      ],
+      "spread_pct": 0.3,
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "transformer_engine": true,
+      "te_layers": [
+        "FlashAttention",
+        "FusedAttention",
+        "FusedScaleMaskSoftmax",
+        "LayerNorm",
+        "UnfusedDotProductAttention"
+      ]
+    },
+    {
+      "stack": "megatron-core",
+      "label": "bf16 + unfused math attn",
+      "params_m": 160.46,
+      "tokens_per_second": 59706.0,
+      "best_tokens_per_second": 59862.3,
+      "step_ms": 68.6,
+      "peak_memory_mib": 3260.8,
+      "total_peak_mib": 3260.8,
+      "loss": 11.00541,
+      "runs_tok_per_s": [
+        59556.7,
+        59862.3,
+        59706.0
+      ],
+      "spread_pct": 0.5,
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "transformer_engine": true,
+      "te_layers": [
+        "LayerNorm"
+      ]
+    },
+    {
+      "stack": "tensorplay",
+      "label": "bf16 + math attn (identical arithmetic)",
+      "params_m": 160.46,
+      "tokens_per_second": 68588.8,
+      "best_tokens_per_second": 68631.6,
+      "step_ms": 59.72,
+      "peak_memory_mib": 4647.4,
+      "total_peak_mib": 4647.4,
+      "loss": 11.21024,
+      "runs_tok_per_s": [
+        68588.8,
+        68542.8,
+        68631.6
+      ],
+      "spread_pct": 0.1,
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "amp": false,
+      "attn": "math"
+    },
+    {
+      "stack": "tensorplay",
+      "label": "bf16 + SDPA attn (production)",
+      "params_m": 160.46,
+      "tokens_per_second": 77490.5,
+      "best_tokens_per_second": 77932.3,
+      "step_ms": 52.86,
+      "peak_memory_mib": 4279.6,
+      "total_peak_mib": 4279.6,
+      "loss": 11.21086,
+      "runs_tok_per_s": [
+        77409.8,
+        77932.3,
+        77490.5
+      ],
+      "spread_pct": 0.7,
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "amp": false,
+      "attn": "sdpa"
+    },
+    {
+      "stack": "tensorplay",
+      "label": "bf16 + SDPA + tp.compile(dynamic=False)",
+      "params_m": 160.46,
+      "tokens_per_second": 84287.6,
+      "best_tokens_per_second": 85101.5,
+      "step_ms": 48.6,
+      "peak_memory_mib": 3069.5,
+      "total_peak_mib": 4605.5,
+      "loss": 11.21087,
+      "runs_tok_per_s": [
+        85101.5,
+        84287.6,
+        84248.0
+      ],
+      "spread_pct": 1.0,
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "amp": false,
+      "attn": "sdpa"
+    },
+    {
+      "stack": "tensorplay",
+      "label": "bf16 + SDPA + compile + fused AdamW",
+      "params_m": 160.46,
+      "tokens_per_second": 85123.9,
+      "best_tokens_per_second": 85124.2,
+      "step_ms": 48.12,
+      "peak_memory_mib": 3069.5,
+      "total_peak_mib": 4605.5,
+      "loss": 11.21089,
+      "runs_tok_per_s": [
+        85123.9,
+        85124.2,
+        84383.6
+      ],
+      "spread_pct": 0.9,
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "amp": false,
+      "attn": "sdpa"
+    },
+    {
+      "stack": "tensorplay",
+      "label": "bf16 + SDPA + fused CE + fused AdamW (best)",
+      "params_m": 160.46,
+      "tokens_per_second": 97790.7,
+      "best_tokens_per_second": 98057.2,
+      "step_ms": 41.89,
+      "peak_memory_mib": 2231.6,
+      "total_peak_mib": 2231.6,
+      "loss": 11.21086,
+      "runs_tok_per_s": [
+        98057.2,
+        97790.7,
+        97169.9
+      ],
+      "spread_pct": 0.9,
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "amp": false,
+      "attn": "sdpa"
+    },
+    {
+      "stack": "tensorplay",
+      "label": "bf16 + SDPA + compiled trunk + fused CE + fused AdamW",
+      "params_m": 160.46,
+      "tokens_per_second": 97760.9,
+      "best_tokens_per_second": 98352.1,
+      "step_ms": 41.9,
+      "peak_memory_mib": 2659.4,
+      "total_peak_mib": 2651.4,
+      "loss": 11.21081,
+      "runs_tok_per_s": [
+        98352.1,
+        97760.9,
+        97354.1
+      ],
+      "spread_pct": 1.0,
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "amp": false,
+      "attn": "sdpa"
+    }
+  ]
+}
