@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Where the vocabulary projection goes, with and without the fused loss.
 
 At vocab 65536 the output projection and its cross entropy are the largest

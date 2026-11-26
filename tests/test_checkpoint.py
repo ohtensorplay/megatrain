@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Checkpoint integrity, generic sidecars and downstream RL fields."""
 
 import math

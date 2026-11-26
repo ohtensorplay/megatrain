@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Backend-only training configuration.
 
 Nothing in here describes an RL objective: loss selection is a per-step

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # Extreme-optimization sweep for the 160.46M GPT on one RTX 3090.
 #
 # The box is shared: another session runs vLLM in bursts, which can halve

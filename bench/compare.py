@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Head-to-head benchmark: megaTrain/TensorPlay vs Megatron-Core.
 
 Both benchmarks use the identical model geometry, dtype, sequence length,

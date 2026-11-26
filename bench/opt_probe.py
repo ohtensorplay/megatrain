@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Probe where time goes in the 160M GPT step, and which knobs actually pay.
 
 Measures (all on one GPU, warmup 2, CUDA-synchronized):

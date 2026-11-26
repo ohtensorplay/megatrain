@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """megaTrain: a generic TensorPlay training core.
 
 The package owns *how* a training step runs (optimizer, FSDP, compile, gradient

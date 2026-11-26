@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Pretraining / SFT step: real forward, backward and optimizer step."""
 
 import math

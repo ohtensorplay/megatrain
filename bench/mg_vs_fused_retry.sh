@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # Same-window comparison: Megatron-Core + TE against TensorPlay with and without
 # the fused vocabulary loss. Only a quiet GPU counts; a disturbed run is
 # discarded and retried, so the bundle is from one consistent window.

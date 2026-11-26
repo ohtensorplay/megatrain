@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Generic training objectives on TensorPlay.
 
 ``sft_loss`` is the next-token cross-entropy used by pretraining and SFT. It

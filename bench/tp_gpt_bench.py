@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """TensorPlay GPT training-core benchmark, architecture-matched to Megatron-Core.
 
 This is the counterpart of ``bench/megatron_bench.py``: same vocabulary, hidden

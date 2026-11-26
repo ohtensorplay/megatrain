@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """In-place cross entropy: never keeps a second [tokens, vocab] buffer alive.
 
 SUPERSEDED: this Python prototype was the first look at the same idea and

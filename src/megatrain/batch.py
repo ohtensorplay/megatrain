@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Backend-agnostic minibatches.
 
 A :class:`TrainBatch` carries only what a forward/backward step needs: token

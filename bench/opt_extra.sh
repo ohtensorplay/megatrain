@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # Two follow-up probes behind bench/results/opt_accum_precision.md:
 #   1. equal effective batch 16: accum(4x4) vs Megatron batch 16
 #   2. precision accounting: autocast fp32-CE vs no-autocast(bf16-CE) vs no-autocast+fp32-CE

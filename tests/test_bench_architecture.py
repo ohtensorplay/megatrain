@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Guard: the TensorPlay GPT benchmark really is Megatron-Core's GPT geometry.
 
 The hand-rolled model in ``bench/tp_gpt_bench.py`` must have exactly the

@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Generic TensorPlay trainer: the *how* of a training step.
 
 Owns the optimizer, FSDP/compile integration, gradient accumulation, frozen

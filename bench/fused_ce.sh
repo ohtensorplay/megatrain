@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # Fused vocabulary projection + CE: A/B against the same stack without it.
 #
 # Same geometry, same dtype, same token budget, same optimizer; the only

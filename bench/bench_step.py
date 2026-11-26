@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Microbenchmark for the megaTrain step loop.
 
 Measures *core overhead* (batching, loss, backward, optimizer) on a small

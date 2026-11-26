@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Tiny real TensorPlay models on CPU: no stubs, no fake optimizers."""
 
 import pytest

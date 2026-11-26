@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Stateless Adam/AdamW for one-step optimizers.
 
 Adapted from megaRL's ``stateless_adam.py`` (Apache-2.0). A stateless optimizer

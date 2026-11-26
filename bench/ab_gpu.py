@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Reproducible GPU A/B for the megaTrain optimization claims.
 
 Compares a legacy-style step (host-list batch rebuild + full log_softmax CE)

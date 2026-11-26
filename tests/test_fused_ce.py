@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """The fused vocabulary projection + CE path.
 
 Two things must hold before this can be called a production optimization:

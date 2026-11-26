@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Megatron-Core single-GPU training-core benchmark (NVIDIA baseline).
 
 Based on upstream-checkouts/Megatron-LM/examples/run_simple_mcore_train_loop.py at the

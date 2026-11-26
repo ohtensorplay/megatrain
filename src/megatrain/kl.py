@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Sampled-token KL estimators.
 
 Adapted from megaRL's ``kl.py`` (Apache-2.0). Every estimator is an element-wise

@@ -1,3 +1,5 @@
+# Copyright 2026 TensorPlay Authors
+# SPDX-License-Identifier: Apache-2.0
 """Production-path checks: packing, clipping, scheduler, resumable fit loop."""
 
 import pytest
