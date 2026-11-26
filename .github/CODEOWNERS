@@ -1,0 +1,3 @@
+# A single owner while the project is small; add per-path owners when the
+# training core and the benchmark harness gain separate maintainers.
+* @lexing-2026

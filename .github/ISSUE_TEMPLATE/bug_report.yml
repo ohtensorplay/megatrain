@@ -1,0 +1,55 @@
+name: Bug report
+description: Something computes the wrong thing, crashes, or is slower than the evidence says
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please include the exact command. For a throughput or memory problem,
+        also say whether `make bench-guard` was quiet — an occupied card is the
+        most common cause of a "regression".
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happened
+      description: The observed behaviour, with the numbers it contradicts.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: Which evidence file or documented claim this disagrees with, if any.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest command or snippet that shows the problem.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Paste the output of:
+        `python -c "import torch, tensorplay; print(torch.__version__, tensorplay.__version__)"`
+        plus the GPU model, driver and CUDA version.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and tracebacks
+      render: text
+    validations:
+      required: false

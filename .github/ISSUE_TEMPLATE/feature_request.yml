@@ -1,0 +1,43 @@
+name: Feature request
+description: A capability megaTrain should own, or a measurement it should make possible
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        megaTrain is the *how* of a training step. Rollout engines, rewards and
+        policy-version plumbing belong in `megaRL`; proposals that need them
+        should say which hook they would use.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What cannot be done or measured today.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: The API or behaviour you want, and which boundary it sits on.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: How it would be verified
+      description: |
+        The test or benchmark that would show it works, and the number it is
+        expected to move. "Faster" is not a verification plan.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

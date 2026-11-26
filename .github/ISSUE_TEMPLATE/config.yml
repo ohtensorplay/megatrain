@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/ohtensorplay/megatrain/security/advisories/new
+    about: Report a vulnerability privately, not in the public tracker.
+  - name: Benchmark evidence
+    url: https://github.com/ohtensorplay/megatrain/tree/main/bench/results
+    about: Read the recorded commands and figures before filing a performance issue.

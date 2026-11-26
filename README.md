@@ -93,9 +93,13 @@ checkpoint 为原子发布 + `LATEST` 指针 + 按 mtime 裁剪；`extra` sideca
 ## 测试
 
 ```bash
-python -m pytest tests -q        # 39 个单测（CPU 为主，GPU 项自动跳过），真实张量和优化器
-ruff check src tests bench
+make check        # lint + 格式检查 + license header + 63 个单测（GPU 项自动跳过）
+make hooks        # 安装 pre-commit 与 commit-msg 钩子
+make bench-guard  # 打印当前 GPU 是否安静到可以计时
 ```
+
+仓库约定（提交信息、DCO 签名、benchmark 证据规则、PR 模板）见
+[`CONTRIBUTING.md`](CONTRIBUTING.md)；CI 与 `make check` 跑的是同一组命令。
 
 若本机 `import tensorplay` 报 `libnccl.so.2` 缺失，把 pip 包里的 NCCL 库路径加入 `LD_LIBRARY_PATH`（本机为 `/home/bluemoon/miniconda3/lib/python3.13/site-packages/nvidia/nccl/lib`）。
 
@@ -198,10 +202,24 @@ trainer.train_step(
 
 优化项、指标体系与**实测结果**见 [`devdocs/performance.md`](devdocs/performance.md)，原始输出见 [`bench/results/compare_te.md`](bench/results/compare_te.md)。RTX 3090 单卡 A/B：AMP bf16（无 GradScaler）约 2.24× 吞吐、显存 −1.1 GiB；固定 shape 下 `tp.compile(dynamic=False)` 是正优化（+9.5%），`dynamic=True` 才是负优化，已做成 `compile_policy`/`compile_dynamic`；fused AdamW 做成 `fused_optimizer`。对标源码 pin 在 [`upstream-checkouts/UPSTREAMS.md`](upstream-checkouts/UPSTREAMS.md)。融合 CE kernel 已实现并实测（§4.6，本地 TP 补丁）；张量/流水线等 6D 并行尚未实现。
 
+## 参与开发
+
+| 设施 | 位置 |
+| --- | --- |
+| 贡献指南（环境、测试规则、benchmark 证据纪律、提交约定） | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| 安全报告（私有渠道与范围） | [`SECURITY.md`](SECURITY.md) |
+| PR 模板（`What and why` / `Evidence` / `Checklist` + 自审勾选） | [`.github/pull_request_template.md`](.github/pull_request_template.md) |
+| Issue 模板（bug / feature，均要求命令与环境） | [`.github/ISSUE_TEMPLATE`](.github/ISSUE_TEMPLATE) |
+| 提交校验器（Conventional Commits + `bench` 类型 + DCO） | [`tools/commit_schema.py`](tools/commit_schema.py) |
+| PR 描述校验器（缺 Evidence 即失败） | [`tools/check_pr_body.py`](tools/check_pr_body.py) |
+| 本地/CI 统一入口 | `make check`、`.github/workflows/ci.yml`、`policy.yml` |
+
+提交必须带 `Signed-off-by`（`git commit -s`）：commit-msg 钩子和 `policy.yml` 都会检查。
+
 ## 与 megaRL 集成
 
 见 [`devdocs/megarl-integration.md`](devdocs/megarl-integration.md)。
 
 ## 验证状态
 
-CPU 单元测试覆盖数值正确性、累积一致性、裁剪、scheduler、打包、checksum、恢复与 checkpoint artifacts（39 个，GPU 项在无卡时自动跳过）。GPU 侧做了 **RTX 3090 单卡、同模型/同 dtype/同 token 预算** 的 head-to-head（含已安装的 Megatron-Core + Transformer Engine）；多卡收敛、6D 并行、设备插件与端到端 RL 吞吐尚未验证，不应据此宣称整体性能。融合 CE 的数值与显存结论有独立测试（`tests/test_fused_ce.py`）和 TP 侧 CUDA 测试（`test/nn/test_nn_functional.py`）。
+CPU 单元测试覆盖数值正确性、累积一致性、裁剪、scheduler、打包、checksum、恢复与 checkpoint artifacts（63 个，GPU 项在无卡时自动跳过）。GPU 侧做了 **RTX 3090 单卡、同模型/同 dtype/同 token 预算** 的 head-to-head（含已安装的 Megatron-Core + Transformer Engine）；多卡收敛、6D 并行、设备插件与端到端 RL 吞吐尚未验证，不应据此宣称整体性能。融合 CE 的数值与显存结论有独立测试（`tests/test_fused_ce.py`）和 TP 侧 CUDA 测试（`test/nn/test_nn_functional.py`）。
