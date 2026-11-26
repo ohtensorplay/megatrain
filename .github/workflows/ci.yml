@@ -50,8 +50,18 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[test]" \
             --extra-index-url https://download.tensorplay.cn/simple
+      # CI installs the published stack, which does not carry the local
+      # fused-CE patch (upstream-checkouts/UPSTREAMS.md). The kernel-only tests skip in that
+      # case; say so in the log instead of letting the skip look accidental.
+      - name: Report whether the stack carries the fused-CE patch
+        run: |
+          python - <<'EOF'
+          import importlib.util
+          present = importlib.util.find_spec("tensorplay.nn._fused_ce") is not None
+          print(f"local fused-CE patch present: {present}")
+          EOF
       - name: Test
-        run: python -m pytest tests -q
+        run: python -m pytest tests -q -ra
 
   package:
     name: package
