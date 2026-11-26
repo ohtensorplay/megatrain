@@ -10,7 +10,9 @@
 # and retried, so the logged medians come from quiet windows only.
 set -u
 cd "$(dirname "$0")/.." || exit 1
-SP=${SP:-/home/bluemoon/miniconda3/lib/python3.13/site-packages/nvidia}
+SCRATCH=${SCRATCH:-$(mktemp -d)}
+mkdir -p "$SCRATCH"
+SP=${SP:-$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/nvidia}
 export LD_LIBRARY_PATH=$SP/nccl/lib:$SP/cu13/lib:${LD_LIBRARY_PATH:-}
 export PYTHONPATH=bench
 
@@ -18,7 +20,7 @@ BATCH=${BATCH:-4}
 STEPS=${STEPS:-10}
 REPS=${REPS:-3}
 MIN_FREE=${MIN_FREE:-18000}
-OUT=${OUT:-/tmp/opencode/opt_sweep.log}
+OUT=${OUT:-$SCRATCH/opt_sweep.log}
 
 free_mib() { nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits; }
 util_pct() { nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | tr -d ' '; }
@@ -45,12 +47,12 @@ one_rep() {
   PYTHONPATH=bench python bench/tp_gpt_bench.py \
     --steps "$STEPS" --seq 1024 --batch "$BATCH" --hidden 1024 --layers 2 \
     --heads 8 --vocab 65536 --precision bf16 --attn sdpa $cfg 2>/dev/null \
-    > /tmp/opencode/one_rep.json
+    > "$SCRATCH/one_rep.json"
   busy_mid=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits)
-  if [ ! -s /tmp/opencode/one_rep.json ]; then echo "FAILED"; return; fi
+  if [ ! -s "$SCRATCH/one_rep.json" ]; then echo "FAILED"; return; fi
   # >2 GiB of foreign allocation appearing mid-run means another tenant moved.
   if [ $((free_before - busy_mid)) -gt 2048 ]; then echo "BUSY"; return; fi
-  python -c "import json; d=json.load(open('/tmp/opencode/one_rep.json')); print(f\"{d['tokens_per_second']:>8,.0f}\t{d['step_ms']:>7.2f}\t{d['peak_memory_mib']:>7.0f}\t{d.get('total_peak_mib', 0):>7.0f}\")"
+  python -c "import json,sys; d=json.load(open(sys.argv[1])); print(f\"{d['tokens_per_second']:>8,.0f}\t{d['step_ms']:>7.2f}\t{d['peak_memory_mib']:>7.0f}\t{d.get('total_peak_mib', 0):>7.0f}\")" "$SCRATCH/one_rep.json"
 }
 
 run() {

@@ -12,7 +12,9 @@
 # and a disturbed window is thrown away and retried.
 set -u
 cd "$(dirname "$0")/.." || exit 1
-SP=${SP:-/home/bluemoon/miniconda3/lib/python3.13/site-packages/nvidia}
+SCRATCH=${SCRATCH:-$(mktemp -d)}
+mkdir -p "$SCRATCH"
+SP=${SP:-$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/nvidia}
 export LD_LIBRARY_PATH=$SP/nccl/lib:$SP/cu13/lib:${LD_LIBRARY_PATH:-}
 export PYTHONPATH=bench
 
@@ -23,7 +25,7 @@ GEOM=${GEOM:-160m}
 # AMP=1 (default) keeps fp32 weights under a bf16 autocast (the "AMP" row);
 # AMP=0 casts the weights to bf16 (the row §4's head-to-head uses).
 AMP=${AMP:-1}
-OUT=${OUT:-/tmp/opencode/fused_ce_${GEOM}.log}
+OUT=${OUT:-$SCRATCH/fused_ce_${GEOM}.log}
 
 case "$GEOM" in
   160m) SHAPE="--seq 1024 --batch 4 --hidden 1024 --layers 2 --heads 8 --vocab 65536" ;;
@@ -50,7 +52,7 @@ one_rep() {
   local cfg="$1" free_before free_after bench=tp_gpt_bench.py flags
   # Per-invocation scratch file: two copies of this script must not overwrite
   # each other's measurement, and a stale file must not be read as a result.
-  local out_json=/tmp/opencode/fused_rep.$$.json
+  local out_json=$SCRATCH/fused_rep.$$.json
   case "$cfg" in
     mg:*) bench=megatron_bench.py; flags="${cfg#mg:}" ;;
     *)    flags="--precision bf16 --attn sdpa $cfg"

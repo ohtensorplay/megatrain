@@ -44,7 +44,7 @@ python bench/ab_gpu.py --steps 12 --seq 1024 --batch 4 --dim 1024 \
 
 ## 2. 还没做、且决定上限的部分
 
-对标源码已 pin 在 [`upstream-checkouts/UPSTREAMS.md`](UPSTREAMS.md)：Megatron-Bridge、NeMo-RL、Megatron-LM、torchtitan。
+对标源码的版本与 commit 记录在本机私有笔记 `devdocs/local/`（不入库）：Megatron-Bridge、NeMo-RL、Megatron-LM、torchtitan。
 
 NVIDIA 的优势在底层 kernel 与并行，不在 Python 循环：
 
@@ -311,6 +311,6 @@ python bench/compare.py --steps 8 --repeat 3 --preset bf16 \
 - **已证伪**：logsumexp CE、分块 CE（吞吐 −10%~−32%）、`native_ignore` 在本环境都不是生产优化；`tp.compile` 只在 `dynamic=True` 时是负优化，固定 shape 下 `dynamic=False` 反而 +8.8%（已做成 `compile_dynamic` 开关，默认 False）。
 - **极致优化矩阵（§4.4，160M 同几何）**：唯一显著正向旋钮是固定 shape 的 `tp.compile`（+8.8%）；`max-autotune` / `fullgraph` 与 `reduce-overhead` 等价；整步 CUDA Graph 只有 +1.6% 且与 compile 互斥；fused AdamW 在单步内是噪声，梯度累积 ×4 再 +4.9%（但有效 batch 变为 4×）。`F.linear_cross_entropy` 在 upstream 1.3 是参考实现（不省显存也不加速），本仓库把它换成融合实现后成为最大单项收益（§4.6）。
 - **瓶颈定位**：vocab 65536 的输出投影 + CE 占前向 69%（9.03 / 13.03 ms），反向是前向的 2.2×，optimizer 只占整步 5.7% —— 这就是为什么循环层面的优化收益有限。
-- **代价与边界**：融合 CE 只能 eager 应用（捕获区会冻结 kernel 的 per-row 缓冲，故自动退回参考路径），这与 Megatron 的布局一致（它的 CE 也是 eager）；且它是**本地 TP 补丁**，不是 upstream 1.3.0 行为（[`../upstream-checkouts/UPSTREAMS.md`](../upstream-checkouts/UPSTREAMS.md) 有记录）。精度没有让步：loss 与 fp32 参考一致，梯度差 ≤1 bf16 ulp。
+- **代价与边界**：融合 CE 只能 eager 应用（捕获区会冻结 kernel 的 per-row 缓冲，故自动退回参考路径），这与 Megatron 的布局一致（它的 CE 也是 eager）；且它是**本地 TP 补丁**，不是 upstream 1.3.0 行为（本机私有笔记 `devdocs/local/` 记录了 commit）。精度没有让步：loss 与 fp32 参考一致，梯度差 ≤1 bf16 ulp。
 - **精度纪律**：唯一能再挤出 ~4% 的开关是把 CE 从 fp32 降到 bf16（88,056 tok/s，对基线 +13.9%），但它改变 loss 轨迹（10 步后 11.1875 vs 11.2169），而 Megatron 用 fp32 CE，故不纳入 headline。
 - **作废**：任何未装 TE 时得到的"1.33×"类结论（见 4.3 附录）。

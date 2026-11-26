@@ -116,6 +116,19 @@ request and in the file header: source URL, revision, files, license, and where
 the notice is retained. `NOTICE` lists what is bundled and what is only
 measured as an external baseline.
 
+## Public tree hygiene
+
+A machine-specific absolute path must never land in a tracked file: not a
+conda install's `site-packages`, not one user's scratch directory, and not
+the name or location of a private upstream checkout. Derive paths at
+runtime (`sysconfig.get_paths()`, `mktemp`) or accept them through `SP`,
+`OUT` and `SCRATCH` environment variables.
+
+Machine-specific notes belong in `devdocs/local/`, which is ignored by git
+(the same pattern Megatron-LM uses with its ignored `local/` directory).
+`make lint` runs `tools/check_public.py` over the tracked files to enforce
+both rules; CI runs it too.
+
 ## Reporting problems
 
 Open a bug report with the exact command, the GPU and versions

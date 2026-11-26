@@ -37,7 +37,7 @@ ERROR: Could not find a version that satisfies the requirement megatron-bridge==
 ### NeMo-RL
 
 - PyPI 上只有占位 `nemo-rl==0.0.0`（无代码）。
-- 官方安装方式是 NVIDIA 容器或从源码装，源码已按 `upstream-checkouts/UPSTREAMS.md` clone 作参考。
+- 官方安装方式是 NVIDIA 容器或从源码装，源码按本机私有笔记（`devdocs/local/`，不入库）记录的 commit clone 作参考。
 - 其运行时依赖（vllm、TE、megatron-core 特定组合）同样要求 Python 3.12，和 Bridge 的限制一致。
 
 ## 结论

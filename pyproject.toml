@@ -38,8 +38,8 @@ addopts = "-ra"
 
 [tool.ruff]
 line-length = 100
-# The pinned upstream checkouts under upstream-checkouts/ keep their own configs.
-extend-exclude = ["upstream-checkouts", "build", "dist"]
+# Build artifacts are not source; private checkouts stay out of git.
+extend-exclude = ["build", "dist"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM"]

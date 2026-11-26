@@ -1,8 +1,8 @@
 # Copyright 2026 TensorPlay Authors
 # SPDX-License-Identifier: Apache-2.0
-"""The repository's own policy tools: commit schema and PR description sync.
+"""The repository's own policy tools: commit schema, PR description, tree hygiene.
 
-Both are run from CI and from pre-commit, so they are exercised here through
+All three run from CI and from pre-commit, so they are exercised here through
 their command line rather than by importing their internals.
 """
 
@@ -16,6 +16,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 COMMIT_SCHEMA = ROOT / "tools" / "commit_schema.py"
 CHECK_PR_BODY = ROOT / "tools" / "check_pr_body.py"
+PUBLIC_CHECK = ROOT / "tools" / "check_public.py"
 
 GOOD_BODY = """## What and why
 
@@ -222,3 +223,51 @@ def test_template_matches_the_checker():
     for heading in ("What and why", "Evidence", "Checklist"):
         assert f"## {heading}" in template
     assert "I, the PR author, have personally reviewed every line of this PR." in template
+
+
+# --- public tree hygiene --------------------------------------------------
+
+
+def public_check(*paths: str):
+    return subprocess.run(
+        [sys.executable, str(PUBLIC_CHECK), *paths],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_the_tracked_tree_is_publishable():
+    result = public_check()
+    assert result.returncode == 0, result.stderr
+    assert "ok" in result.stdout
+
+
+def test_public_check_accepts_runtime_derived_paths(tmp_path):
+    path = tmp_path / "portable.sh"
+    path.write_text(
+        "SCRATCH=${SCRATCH:-$(mktemp -d)}\n"
+        "SP=$(python -c 'import sysconfig; print(sysconfig.get_paths()[\"purelib\"])')/nvidia\n"
+    )
+    result = public_check(str(path))
+    assert result.returncode == 0, result.stderr
+
+
+def test_public_check_rejects_machine_paths_and_private_names(tmp_path):
+    # Both needles are assembled from fragments so this test file stays clean.
+    machine_path = "/" + "home" + "/someone/project"
+    private_name = "re" + "fs"
+    path = tmp_path / "bad.md"
+    path.write_text(f"checkout at {machine_path} under {private_name}/\n")
+    result = public_check(str(path))
+    assert result.returncode == 1
+    assert "machine-specific absolute path" in result.stderr
+    assert "private checkout name" in result.stderr
+
+
+def test_private_notes_are_ignored_by_git():
+    result = subprocess.run(
+        ["git", "check-ignore", "-q", "devdocs/local/environment.md"],
+        cwd=ROOT,
+    )
+    assert result.returncode == 0

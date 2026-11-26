@@ -35,6 +35,11 @@ repos:
         entry: python -m ruff format
         language: system
         types_or: [python, pyi]
+      - id: public-tree
+        name: public tree hygiene
+        entry: python tools/check_public.py
+        language: system
+        files: \.(py|sh|md|yml|yaml|toml|json|json5|txt|cfg|ini|editorconfig)$
       - id: commit-schema
         name: commit message schema
         entry: python tools/commit_schema.py --commit-msg-file

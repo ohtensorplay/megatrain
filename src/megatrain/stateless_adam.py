@@ -7,7 +7,9 @@ resets its first and second moments at every step, so it never persists moment
 tensors. The update is exactly Adam/AdamW with zero initial moments, which
 removes optimizer moments from checkpoints at the cost of bit-exact resume.
 
-Reference: ``upstream-checkouts/slime/slime/backends/megatron_utils/stateless_adam.py``.
+Reference: the stateless Adam optimizer in the slime training stack
+(Apache-2.0); the exact revision is kept in the private local note
+under ``devdocs/local/``.
 """
 
 from __future__ import annotations

@@ -13,7 +13,7 @@ Both are checked here, on the GPU when one is present (the path is CUDA-only and
 falls back to the composed reference elsewhere).
 
 The kernel-dependent checks skip when the installed TensorPlay does not carry
-the local patch recorded in ``upstream-checkouts/UPSTREAMS.md``: without it,
+the local patch described in ``devdocs/performance.md`` §4.6: without it,
 ``F.linear_cross_entropy`` composes the reference and proves nothing about the
 kernels.  The objective-level checks run either way.
 """
@@ -45,7 +45,7 @@ def _module_exists(name: str) -> bool:
 HAS_FUSED_KERNEL = _module_exists("tensorplay.nn._fused_ce")
 requires_fused = pytest.mark.skipif(
     not HAS_FUSED_KERNEL,
-    reason="needs the local TensorPlay fused-CE patch (see upstream-checkouts/UPSTREAMS.md)",
+    reason="needs the local TensorPlay fused-CE patch (see devdocs/performance.md)",
 )
 
 TOKENS, HIDDEN, VOCAB = 256, 64, 4096

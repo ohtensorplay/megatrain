@@ -32,6 +32,7 @@ jobs:
       - run: python -m ruff check src tests bench tools
       - run: python -m ruff format --check src tests bench tools
       - run: python tools/check_headers.py
+      - run: python tools/check_public.py
 
   test:
     name: test (${{ matrix.python-version }})
@@ -51,7 +52,8 @@ jobs:
           python -m pip install -e ".[test]" \
             --extra-index-url https://download.tensorplay.cn/simple
       # CI installs the published stack, which does not carry the local
-      # fused-CE patch (upstream-checkouts/UPSTREAMS.md). The kernel-only tests skip in that
+      # fused-CE patch (devdocs/performance.md §4.6). The kernel-only
+      # tests skip in that
       # case; say so in the log instead of letting the skip look accidental.
       - name: Report whether the stack carries the fused-CE patch
         run: |

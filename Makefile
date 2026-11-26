@@ -24,6 +24,7 @@ lint:  ## Lint, formatting and license-header checks
 	$(PY) -m ruff check src tests bench tools
 	$(PY) -m ruff format --check src tests bench tools
 	$(PY) tools/check_headers.py
+	$(PY) tools/check_public.py
 
 format:  ## Apply the automatic fixes
 	$(PY) -m ruff check --fix src tests bench tools

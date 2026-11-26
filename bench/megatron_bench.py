@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Megatron-Core single-GPU training-core benchmark (NVIDIA baseline).
 
-Based on upstream-checkouts/Megatron-LM/examples/run_simple_mcore_train_loop.py at the
-revision pinned in upstream-checkouts/UPSTREAMS.md. It uses Megatron-Core's GPTModel with
+Adapted from Megatron-LM's simple one-step training-loop example (NVIDIA,
+Apache-2.0); the exact revision is kept in the private local note under
+devdocs/local/. It uses Megatron-Core's GPTModel with
 TP=PP=1 on one GPU and reports step time / tokens per second / peak memory.
 
 Note: the model architecture is a Megatron GPT (attention + MLP), while

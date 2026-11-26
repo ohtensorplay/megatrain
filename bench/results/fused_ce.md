@@ -88,7 +88,7 @@ backward 一次、或对同一张图第二次 `autograd.grad`，都会在“梯�
 ## 5. 证据边界
 
 - 融合 CE **不能**进入 `tp.compile` 捕获区（见 §1 作用域限制）；本表的 fused 行都是 eager loss。
-- 这是**本地 TP 源码改动**，不是 upstream 1.3.0 release 的行为；`upstream-checkouts/` 里记录的 commit 没有它。
+- 这是**本地 TP 源码改动**，不是 upstream 1.3.0 release 的行为；已安装的 1.3.0 release 不含它。
   README/文档里凡引用该数字处都注明 “TP + local patch”。
 - 只融合了**纯 CE**路径：class weight、`label_smoothing != 0`、以及 `sft_loss` 的 KL/蒸馏项需要 logits 本身，
   仍走参考实现（`sft_loss_with_head` 会显式退回 `sft_loss`，有测试覆盖）。
@@ -98,10 +98,13 @@ backward 一次、或对同一张图第二次 `autograd.grad`，都会在“梯�
 ## 6. 复现
 
 ```bash
+# 本机临时目录由环境给出，不写死路径
+TMPDIR=${TMPDIR:-$(mktemp -d)}
+
 # §2 / §3 的 5 个配置（AMP=0 = bf16 权重；AMP=1 = fp32 权重 + bf16 autocast）
-AMP=0 GEOM=160m REPS=3 STEPS=12 MIN_FREE=8000 OUT=/tmp/fused_160m.log ./bench/fused_ce.sh
-AMP=0 GEOM=474m REPS=3 STEPS=8  MIN_FREE=17000 OUT=/tmp/fused_474m.log ./bench/fused_ce.sh
-AMP=1 GEOM=160m REPS=3 STEPS=12 MIN_FREE=8000 OUT=/tmp/fused_160m_amp.log ./bench/fused_ce.sh
+AMP=0 GEOM=160m REPS=3 STEPS=12 MIN_FREE=8000 OUT=$TMPDIR/fused_160m.log ./bench/fused_ce.sh
+AMP=0 GEOM=474m REPS=3 STEPS=8  MIN_FREE=17000 OUT=$TMPDIR/fused_474m.log ./bench/fused_ce.sh
+AMP=1 GEOM=160m REPS=3 STEPS=12 MIN_FREE=8000 OUT=$TMPDIR/fused_160m_amp.log ./bench/fused_ce.sh
 
 # §4 的逐段计时与 kernel 微基准
 PYTHONPATH=bench python bench/vocab_probe.py --iters 10

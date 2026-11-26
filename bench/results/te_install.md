@@ -33,13 +33,13 @@ $ nm -D --defined-only nvidia/cu13/lib/libcublasLt.so.13 | grep GroupedMatrixLay
 0000000001b65330 T cublasLtGroupedMatrixLayoutInit_internal@@libcublasLt.so.13
 ```
 
-- 旧库备份在 `/tmp/opencode/cublas_backup/`，可随时回滚。
+- 旧库备份放在临时目录（路径见本机私有笔记 `devdocs/local/`，不入库），可随时回滚。
 - 换库后 torch 2.13 的 bf16/fp32 matmul 均正常（见下）。
 
 ## 3. 运行验证
 
 ```bash
-SP=/home/bluemoon/miniconda3/lib/python3.13/site-packages/nvidia
+SP=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/nvidia
 export LD_LIBRARY_PATH=$SP/nccl/lib:$SP/cu13/lib:$LD_LIBRARY_PATH
 python - <<'PY'
 import torch

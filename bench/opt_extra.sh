@@ -9,7 +9,9 @@
 # Idle-GPU only, same guard as opt_sweep.sh (this box is shared).
 set -u
 cd "$(dirname "$0")/.." || exit 1
-SP=${SP:-/home/bluemoon/miniconda3/lib/python3.13/site-packages/nvidia}
+SCRATCH=${SCRATCH:-$(mktemp -d)}
+mkdir -p "$SCRATCH"
+SP=${SP:-$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/nvidia}
 export LD_LIBRARY_PATH=$SP/nccl/lib:$SP/cu13/lib:${LD_LIBRARY_PATH:-}
 export PYTHONPATH=bench
 MIN_FREE=${MIN_FREE:-18000}
@@ -59,4 +61,4 @@ run_n() {  # run_n <label> <function> <args...>
   run_n "TP compile, autocast (fp32 LN/CE)" tp --batch 4 --steps 10 --compile
   run_n "TP compile, no-autocast + fp32 CE" tp --batch 4 --steps 10 --compile --no-autocast --ce-fp32
   run_n "TP compile, no-autocast (bf16 LN/CE)" tp --batch 4 --steps 10 --compile --no-autocast
-} 2>&1 | tee /tmp/opencode/opt_extra.log
+} 2>&1 | tee "${OUT:-$SCRATCH/opt_extra.log}"

@@ -101,7 +101,14 @@ make bench-guard  # 打印当前 GPU 是否安静到可以计时
 仓库约定（提交信息、DCO 签名、benchmark 证据规则、PR 模板）见
 [`CONTRIBUTING.md`](CONTRIBUTING.md)；CI 与 `make check` 跑的是同一组命令。
 
-若本机 `import tensorplay` 报 `libnccl.so.2` 缺失，把 pip 包里的 NCCL 库路径加入 `LD_LIBRARY_PATH`（本机为 `/home/bluemoon/miniconda3/lib/python3.13/site-packages/nvidia/nccl/lib`）。
+若本机 `import tensorplay` 报 `libnccl.so.2` 缺失，从 pip 包里推导 NCCL 路径再设置 `LD_LIBRARY_PATH`，不要写死任何本机路径：
+
+```bash
+SP=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/nvidia
+export LD_LIBRARY_PATH=$SP/nccl/lib:$SP/cu13/lib:$LD_LIBRARY_PATH
+```
+
+各机器的私有路径与上游检出 commit 只记在 `devdocs/local/`（被 git 忽略）。
 
 ## 性能
 
@@ -120,7 +127,7 @@ A/B 脚本：`python bench/ab_gpu.py --steps 12 --seq 1024 --batch 4 --dim 1024 
 python bench/compare.py --steps 12 --repeat 3 --preset bf16 --min-free-mib 20000
 ```
 
-表中标着 **TP 本地补丁** 的那一行需要本仓库对 TensorPlay 源码的改动（见 [`upstream-checkouts/UPSTREAMS.md`](upstream-checkouts/UPSTREAMS.md)）；
+表中标着 **TP 本地补丁** 的那一行需要本仓库对 TensorPlay 源码的改动（见 [`devdocs/performance.md`](devdocs/performance.md) §4.6；本机补丁细节在未入库的 `devdocs/local/`）；
 upstream 1.3.0 的 `linear_cross_entropy` 是参考实现，没有这个收益。
 
 | 栈 | 配置 | tokens/s | step ms | step 峰值 MiB |
@@ -200,7 +207,7 @@ trainer.train_step(
 
 > 更早版本用"未装 TE"的回退路径做过对比并得到 1.33×；该数据已**作废**，只保留在 [`devdocs/performance.md`](devdocs/performance.md) 的 4.3 附录，用于说明为什么必须先装 TE。TE 安装证据见 [`bench/results/te_install.md`](bench/results/te_install.md)；Bridge/NeMo-RL 在 Python 3.13 装不上的硬原因见 [`bench/results/nvidia_stack_install.md`](bench/results/nvidia_stack_install.md)。
 
-优化项、指标体系与**实测结果**见 [`devdocs/performance.md`](devdocs/performance.md)，原始输出见 [`bench/results/compare_te.md`](bench/results/compare_te.md)。RTX 3090 单卡 A/B：AMP bf16（无 GradScaler）约 2.24× 吞吐、显存 −1.1 GiB；固定 shape 下 `tp.compile(dynamic=False)` 是正优化（+9.5%），`dynamic=True` 才是负优化，已做成 `compile_policy`/`compile_dynamic`；fused AdamW 做成 `fused_optimizer`。对标源码 pin 在 [`upstream-checkouts/UPSTREAMS.md`](upstream-checkouts/UPSTREAMS.md)。融合 CE kernel 已实现并实测（§4.6，本地 TP 补丁）；张量/流水线等 6D 并行尚未实现。
+优化项、指标体系与**实测结果**见 [`devdocs/performance.md`](devdocs/performance.md)，原始输出见 [`bench/results/compare_te.md`](bench/results/compare_te.md)。RTX 3090 单卡 A/B：AMP bf16（无 GradScaler）约 2.24× 吞吐、显存 −1.1 GiB；固定 shape 下 `tp.compile(dynamic=False)` 是正优化（+9.5%），`dynamic=True` 才是负优化，已做成 `compile_policy`/`compile_dynamic`；fused AdamW 做成 `fused_optimizer`。对标源码的版本与 commit 只记在本机私有笔记 `devdocs/local/`（不入库）。融合 CE kernel 已实现并实测（§4.6，本地 TP 补丁）；张量/流水线等 6D 并行尚未实现。
 
 ## 参与开发
 
@@ -212,6 +219,7 @@ trainer.train_step(
 | Issue 模板（bug / feature，均要求命令与环境） | [`.github/ISSUE_TEMPLATE`](.github/ISSUE_TEMPLATE) |
 | 提交校验器（Conventional Commits + `bench` 类型 + DCO） | [`tools/commit_schema.py`](tools/commit_schema.py) |
 | PR 描述校验器（缺 Evidence 即失败） | [`tools/check_pr_body.py`](tools/check_pr_body.py) |
+| 公开目录校验器（禁本机路径与私有检出目录名） | [`tools/check_public.py`](tools/check_public.py) |
 | 本地/CI 统一入口 | `make check`、`.github/workflows/ci.yml`、`policy.yml` |
 
 提交必须带 `Signed-off-by`（`git commit -s`）：commit-msg 钩子和 `policy.yml` 都会检查。

@@ -8,6 +8,5 @@ build/
 dist/
 .tp_cache/
 
-# Pinned upstream checkouts under upstream-checkouts/ are clones, not vendored sources:
-# re-clone them at the commits recorded in upstream-checkouts/UPSTREAMS.md.
-upstream-checkouts/*/
+# Machine-specific notes stay out of git, as Megatron-LM does with local/.
+devdocs/local/
