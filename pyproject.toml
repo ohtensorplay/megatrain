@@ -18,7 +18,8 @@ test = ["pytest>=8"]
 dev = [
     "pre-commit>=3.7",
     "pytest>=8",
-    "ruff>=0.16",
+    # Pinned: ruff format output is part of the gate, so the version is too.
+    "ruff==0.16.8",
     "build>=1.2",
     "twine>=5",
 ]

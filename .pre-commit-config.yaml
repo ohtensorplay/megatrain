@@ -1,0 +1,43 @@
+# Local gates mirror `make check`; CI runs the same commands so a red hook and
+# a red pull request mean the same thing.
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: ["--markdown-linebreak-ext=md"]
+
+  # The project's own tools run from the working tree, not from a pinned copy,
+  # so the gate can never disagree with what `make check` does.
+  - repo: local
+    hooks:
+      - id: license-headers
+        name: license headers
+        entry: python tools/check_headers.py
+        language: system
+        files: \.(py|sh)$
+      - id: ruff-check
+        name: ruff check
+        entry: python -m ruff check --fix
+        language: system
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff format
+        entry: python -m ruff format
+        language: system
+        types_or: [python, pyi]
+      - id: commit-schema
+        name: commit message schema
+        entry: python tools/commit_schema.py --commit-msg-file
+        language: system
+        stages: [commit-msg]
+        pass_filenames: true
