@@ -1,0 +1,10 @@
+megaRL — RL post-training infrastructure built on TensorPlay and MegaLM
+Copyright 2026 TensorPlay Authors
+
+This product includes software developed by the TensorPlay project and its
+contributors: https://github.com/lexing-2026/TensorPlay
+
+The rollout backend builds on MegaLM: https://github.com/ohtensorplay/megalm
+
+Third-party dependencies remain under their own licenses. See their license
+headers and the dependency lists in pyproject.toml and rust/Cargo.toml.
